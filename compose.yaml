@@ -1,0 +1,193 @@
+name: opensource-doc-intelligence
+
+x-app-environment: &app-environment
+  APP_ENV: ${APP_ENV:-production}
+  APP_HOST: 0.0.0.0
+  APP_PORT: 8000
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  GIT_COMMIT: ${GIT_COMMIT:-}
+  # Prefer an explicit, percent-encoded URL so managed databases and passwords
+  # containing URL-reserved characters work without unsafe string assembly.
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://rag:rag@postgres:5432/rag}
+  DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+  DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-20}
+  API_KEY: ${API_KEY:-}
+  ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+  CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:3000"]}'
+  GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+  GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-kubernetes/kubernetes}
+  GITHUB_BRANCH: ${GITHUB_BRANCH:-master}
+  LLM_PROVIDER: ${LLM_PROVIDER:-openai_compatible}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-}
+  LLM_API_VERSION: ${LLM_API_VERSION:-}
+  LLM_DEPLOYMENT: ${LLM_DEPLOYMENT:-}
+  LLM_TOKENIZER_PROVIDER: ${LLM_TOKENIZER_PROVIDER:-auto}
+  LLM_TOKENIZER_MODEL: ${LLM_TOKENIZER_MODEL:-}
+  LLM_TOKENIZER_ALLOW_REGEX_FALLBACK: ${LLM_TOKENIZER_ALLOW_REGEX_FALLBACK:-false}
+  LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-60}
+  LLM_MAX_CONCURRENCY: ${LLM_MAX_CONCURRENCY:-8}
+  LLM_HEALTHCHECK_MODE: ${LLM_HEALTHCHECK_MODE:-auto}
+  ANSWER_MAX_TOKENS: ${ANSWER_MAX_TOKENS:-1200}
+  QUERY_REWRITE_MAX_TOKENS: ${QUERY_REWRITE_MAX_TOKENS:-256}
+  QUERY_REWRITE_HISTORY_TURNS: ${QUERY_REWRITE_HISTORY_TURNS:-4}
+  JUDGE_PROVIDER: ${JUDGE_PROVIDER:-}
+  JUDGE_BASE_URL: ${JUDGE_BASE_URL:-}
+  JUDGE_API_KEY: ${JUDGE_API_KEY:-}
+  JUDGE_MODEL: ${JUDGE_MODEL:-}
+  JUDGE_API_VERSION: ${JUDGE_API_VERSION:-}
+  JUDGE_DEPLOYMENT: ${JUDGE_DEPLOYMENT:-}
+  JUDGE_MAX_TOKENS: ${JUDGE_MAX_TOKENS:-256}
+  JUDGE_TIMEOUT_SECONDS: ${JUDGE_TIMEOUT_SECONDS:-20}
+  EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-local}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-BAAI/bge-m3}
+  EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+  EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+  EMBEDDING_API_VERSION: ${EMBEDDING_API_VERSION:-}
+  EMBEDDING_DEPLOYMENT: ${EMBEDDING_DEPLOYMENT:-}
+  EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-1024}
+  DATABASE_VECTOR_DIMENSION: ${DATABASE_VECTOR_DIMENSION:-1024}
+  EMBEDDING_BATCH_SIZE: ${EMBEDDING_BATCH_SIZE:-32}
+  EMBEDDING_TIMEOUT_SECONDS: ${EMBEDDING_TIMEOUT_SECONDS:-60}
+  EMBEDDING_MAX_CONCURRENCY: ${EMBEDDING_MAX_CONCURRENCY:-2}
+  EMBEDDING_HEALTHCHECK_MODE: ${EMBEDDING_HEALTHCHECK_MODE:-auto}
+  RERANKER_PROVIDER: ${RERANKER_PROVIDER:-local}
+  RERANKER_MODEL: ${RERANKER_MODEL:-BAAI/bge-reranker-v2-m3}
+  RERANKER_BASE_URL: ${RERANKER_BASE_URL:-}
+  RERANKER_API_KEY: ${RERANKER_API_KEY:-}
+  RERANKER_BATCH_SIZE: ${RERANKER_BATCH_SIZE:-16}
+  RERANKER_TIMEOUT_SECONDS: ${RERANKER_TIMEOUT_SECONDS:-60}
+  RERANKER_MAX_CONCURRENCY: ${RERANKER_MAX_CONCURRENCY:-2}
+  RERANKER_HEALTHCHECK_MODE: ${RERANKER_HEALTHCHECK_MODE:-auto}
+  RERANKER_HEALTHCHECK_RESOURCE: ${RERANKER_HEALTHCHECK_RESOURCE:-}
+  RERANKER_SCORE_THRESHOLD: ${RERANKER_SCORE_THRESHOLD:-}
+  PROVIDER_MAX_RETRIES: ${PROVIDER_MAX_RETRIES:-3}
+  KEYWORD_TOP_K: ${KEYWORD_TOP_K:-30}
+  VECTOR_TOP_K: ${VECTOR_TOP_K:-30}
+  RERANK_TOP_K: ${RERANK_TOP_K:-8}
+  RRF_K: ${RRF_K:-60}
+  RETRIEVAL_MODE: ${RETRIEVAL_MODE:-hybrid}
+  FUSION_MODE: ${FUSION_MODE:-rrf}
+  KEYWORD_FUSION_WEIGHT: ${KEYWORD_FUSION_WEIGHT:-0.5}
+  VECTOR_FUSION_WEIGHT: ${VECTOR_FUSION_WEIGHT:-0.5}
+  CHUNK_TARGET_TOKENS: ${CHUNK_TARGET_TOKENS:-500}
+  CHUNK_MAX_TOKENS: ${CHUNK_MAX_TOKENS:-800}
+  CHUNK_OVERLAP_TOKENS: ${CHUNK_OVERLAP_TOKENS:-80}
+  CHUNK_MIN_TOKENS: ${CHUNK_MIN_TOKENS:-80}
+  CHUNK_TOKENIZER_PROVIDER: ${CHUNK_TOKENIZER_PROVIDER:-auto}
+  CHUNK_TOKENIZER_MODEL: ${CHUNK_TOKENIZER_MODEL:-}
+  CHUNK_TOKENIZER_ALLOW_REGEX_FALLBACK: ${CHUNK_TOKENIZER_ALLOW_REGEX_FALLBACK:-false}
+  NO_ANSWER_TOP1_THRESHOLD: ${NO_ANSWER_TOP1_THRESHOLD:-}
+  NO_ANSWER_AVG_THRESHOLD: ${NO_ANSWER_AVG_THRESHOLD:-}
+  NO_ANSWER_MARGIN_THRESHOLD: ${NO_ANSWER_MARGIN_THRESHOLD:-}
+  NO_ANSWER_TOP_K: ${NO_ANSWER_TOP_K:-3}
+  NO_ANSWER_TOPIC_OVERLAP_THRESHOLD: ${NO_ANSWER_TOPIC_OVERLAP_THRESHOLD:-0.05}
+  NO_ANSWER_GRAY_ZONE_LOWER: ${NO_ANSWER_GRAY_ZONE_LOWER:-0.35}
+  NO_ANSWER_GRAY_ZONE_UPPER: ${NO_ANSWER_GRAY_ZONE_UPPER:-0.65}
+  EVIDENCE_SUFFICIENCY_THRESHOLD: ${EVIDENCE_SUFFICIENCY_THRESHOLD:-0.60}
+  CITATION_COVERAGE_THRESHOLD: ${CITATION_COVERAGE_THRESHOLD:-0.60}
+  MAX_CONTEXT_TOKENS: ${MAX_CONTEXT_TOKENS:-6000}
+  ENABLE_QUERY_REWRITE: ${ENABLE_QUERY_REWRITE:-true}
+  ENABLE_RERANKER: ${ENABLE_RERANKER:-true}
+  ENABLE_CITATION_VALIDATION: ${ENABLE_CITATION_VALIDATION:-true}
+  ENABLE_TELEMETRY: ${ENABLE_TELEMETRY:-false}
+  OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-opensource-doc-intelligence}
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  PRICING_CONFIG_PATH: config/pricing.yaml
+  PROMPT_DIRECTORY: prompts
+  INGESTION_WORKER_POLL_SECONDS: ${INGESTION_WORKER_POLL_SECONDS:-2}
+  EVALUATION_WORKER_POLL_SECONDS: ${EVALUATION_WORKER_POLL_SECONDS:-2}
+  INGESTION_MAX_OUTSTANDING_JOBS: ${INGESTION_MAX_OUTSTANDING_JOBS:-100}
+  EVALUATION_MAX_OUTSTANDING_RUNS: ${EVALUATION_MAX_OUTSTANDING_RUNS:-10}
+  INGESTION_MAX_CONCURRENT_JOBS: ${INGESTION_MAX_CONCURRENT_JOBS:-1}
+  EVALUATION_MAX_CONCURRENT_RUNS: ${EVALUATION_MAX_CONCURRENT_RUNS:-1}
+  QUEUE_RETRY_AFTER_SECONDS: ${QUEUE_RETRY_AFTER_SECONDS:-5}
+  EVALUATION_CONCURRENCY: ${EVALUATION_CONCURRENCY:-1}
+  EVALUATION_HEARTBEAT_SECONDS: ${EVALUATION_HEARTBEAT_SECONDS:-30}
+  EVALUATION_STALE_SECONDS: ${EVALUATION_STALE_SECONDS:-86400}
+  MAX_QUERY_LENGTH: ${MAX_QUERY_LENGTH:-4000}
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      # Compose defaults match the configured local BGE providers. Set false
+      # only when every model is supplied by a remote service.
+      INSTALL_LOCAL_MODELS: ${INSTALL_LOCAL_MODELS:-true}
+      GIT_COMMIT: ${GIT_COMMIT:-}
+  image: opensource-doc-intelligence:local
+  environment: *app-environment
+  volumes:
+    - ingestion-cache:/app/.cache/ingestion
+    - model-cache:/home/odi/.cache/huggingface
+    - evaluation-reports:/app/evaluation/reports
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: rag
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "app.worker"]
+    # The image-level HTTP healthcheck is for the API process. Durable workers
+    # expose health through their leased job state and structured logs instead.
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  evaluation-worker:
+    <<: *app
+    command: ["python", "-m", "app.evaluation_worker"]
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  ingestion-cache:
+  model-cache:
+  evaluation-reports:

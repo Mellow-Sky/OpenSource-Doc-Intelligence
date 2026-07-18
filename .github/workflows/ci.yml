@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-and-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: rag_test
+          POSTGRES_USER: rag
+          POSTGRES_PASSWORD: rag
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rag -d rag_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://rag:rag@127.0.0.1:5432/rag_test
+      TEST_DATABASE_URL: postgresql+asyncpg://rag:rag@127.0.0.1:5432/rag_test
+      UV_CACHE_DIR: /tmp/odi-uv-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.29"
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install locked development dependencies
+        run: uv sync --frozen --extra dev
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Ruff format check
+        run: uv run ruff format --check .
+      - name: Mypy
+        run: uv run mypy app
+      - name: Apply database migrations
+        run: uv run alembic upgrade head
+      - name: Test
+        run: uv run pytest
+
+  container-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose model
+        run: docker compose config --quiet
+      - name: Build production image without optional local weights
+        env:
+          GIT_COMMIT: "${{ github.sha }}"
+          INSTALL_LOCAL_MODELS: "false"
+        run: docker compose build
+      - name: Smoke-test installed runtime assets
+        run: >-
+          docker run --rm --entrypoint sh opensource-doc-intelligence:local -c
+          'python -c "import app.main, evaluation" && alembic heads'

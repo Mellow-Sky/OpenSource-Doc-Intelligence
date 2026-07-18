@@ -1,0 +1,115 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opensource-doc-intelligence"
+version = "0.1.0"
+description = "Enterprise-grade retrieval-augmented generation for open-source documentation"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = { text = "Apache-2.0" }
+authors = [{ name = "OpenSource Doc Intelligence Contributors" }]
+dependencies = [
+  "alembic>=1.14,<2",
+  "asyncpg>=0.30,<1",
+  "beautifulsoup4>=4.12,<5",
+  "fastapi>=0.115.8,<0.116",
+  "httpx>=0.28,<1",
+  "markdown-it-py>=3,<5",
+  "orjson>=3.10,<4",
+  "pgvector>=0.3.6,<1",
+  "prometheus-client>=0.21,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "python-multipart>=0.0.20,<1",
+  "pyyaml>=6,<7",
+  "sqlalchemy[asyncio]>=2.0.36,<3",
+  "sse-starlette>=2.2,<4",
+  "starlette>=0.45,<0.47",
+  "structlog>=24.4,<26",
+  "tenacity>=9,<10",
+  "trafilatura>=2,<3",
+  # Tokenizer-only remote deployments need Hugging Face tokenization without
+  # installing PyTorch or the full local-model extra.
+  "transformers>=4.48,<5",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+models = [
+  "FlagEmbedding>=1.3,<2",
+  "sentence-transformers>=3.3,<6",
+]
+telemetry = [
+  "opentelemetry-api>=1.29,<2",
+  "opentelemetry-exporter-otlp>=1.29,<2",
+  "opentelemetry-instrumentation-fastapi>=0.50b0,<1",
+]
+dev = [
+  "aiosqlite>=0.20,<1",
+  "mypy>=1.14,<2",
+  "pre-commit>=4,<5",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<1",
+  "pytest-cov>=6,<8",
+  "respx>=0.22,<1",
+  "ruff>=0.9,<1",
+  "types-PyYAML>=6,<7",
+]
+
+[project.scripts]
+odi-api = "app.main:run"
+odi-worker = "app.worker:main"
+odi-evaluation-worker = "app.evaluation_worker:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "evaluation"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+  "integration: requires a running PostgreSQL 16 instance with pgvector",
+  "e2e: exercises the full application workflow",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "C4", "SIM", "RUF"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+packages = ["app"]
+exclude = ["migrations"]
+
+[[tool.mypy.overrides]]
+module = [
+  "FlagEmbedding.*",
+  "sentence_transformers.*",
+  "trafilatura.*",
+]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+branch = true
+source = ["app", "evaluation"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 75

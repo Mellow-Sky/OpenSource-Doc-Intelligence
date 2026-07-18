@@ -1,0 +1,66 @@
+sources:
+  - name: kubernetes-official-documentation
+    source_type: github_repository
+    base_url: https://kubernetes.io/docs/
+    repository: kubernetes/website
+    branch: main
+    enabled: true
+    config:
+      include:
+        - content/en/docs/**/*.md
+      exclude:
+        - content/en/docs/reference/generated/**
+        - "**/_index.md"
+      document_type: official_documentation
+      shallow: true
+      git_timeout_seconds: 300
+
+  - name: kubernetes-repository-documents
+    source_type: github_repository
+    base_url: https://github.com/kubernetes/kubernetes
+    repository: kubernetes/kubernetes
+    branch: master
+    enabled: true
+    config:
+      include:
+        - docs/**/*.md
+        - CHANGELOG/CHANGELOG-*.md
+      exclude:
+        - vendor/**
+        - staging/**/vendor/**
+      document_type: repository_document
+      shallow: true
+      git_timeout_seconds: 300
+
+  - name: kubernetes-github-issues
+    source_type: github_issues
+    base_url: https://github.com/kubernetes/kubernetes/issues
+    repository: kubernetes/kubernetes
+    branch: null
+    enabled: true
+    config:
+      include_pull_requests: false
+      include_comments: false
+      state: all
+      max_pages: 5000
+
+  - name: kubernetes-release-notes
+    source_type: release_notes
+    base_url: https://github.com/kubernetes/kubernetes/releases
+    repository: kubernetes/kubernetes
+    branch: master
+    enabled: true
+    config:
+      include_github_releases: true
+      changelog_glob: CHANGELOG/CHANGELOG-*.md
+      git_timeout_seconds: 300
+
+  - name: kubernetes-api-reference
+    source_type: kubernetes_api_reference
+    base_url: https://kubernetes.io/docs/reference/kubernetes-api/
+    repository: kubernetes/website
+    branch: main
+    enabled: true
+    config:
+      api_group: all
+      versions: []

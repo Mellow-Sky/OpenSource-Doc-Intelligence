@@ -1,0 +1,12 @@
+[
+  {
+    "number": 12345,
+    "title": "Deployment rollout stalls when an image cannot be pulled",
+    "body": "The new ReplicaSet remains unavailable after ImagePullBackOff.",
+    "state": "open",
+    "labels": [{"name": "sig/apps"}, {"name": "kind/bug"}],
+    "html_url": "https://github.com/kubernetes/kubernetes/issues/12345",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-02T00:00:00Z"
+  }
+]
